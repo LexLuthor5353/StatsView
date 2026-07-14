@@ -48,7 +48,7 @@ class StatsView @JvmOverloads constructor(
         }
         paint.strokeWidth = lineWidth.toFloat()
     }
-    var data: List<Float> = emptyList()
+    var data: Pair<List<Float>, Float> = emptyList<Float>() to 0F
         set(value) {
             field = value
             invalidate()
@@ -76,26 +76,28 @@ class StatsView @JvmOverloads constructor(
     }
 
     override fun onDraw(canvas: Canvas) {
-        if (data.isEmpty()) {
-            return
-        }
-        val total = data.sum()
+        val (values, total) = data
         if (total == 0F) {
             return
         }
+        paint.color = 0xFFE0E0E0.toInt()
+        canvas.drawCircle(center.x, center.y, radius, paint)
+
         var startAngle = -90F
-        data.forEachIndexed { index, datum ->
+        values.forEachIndexed { index, datum ->
             val angle = datum / total * 360F
             paint.color = colors.getOrElse(index) { generateRandomColor() }
             canvas.drawArc(oval, startAngle, angle, false, paint)
             startAngle += angle
         }
 
-        dotPaint.color = colors.getOrElse(0) { generateRandomColor() }
-        canvas.drawCircle(center.x, center.y - radius, lineWidth / 2F, dotPaint)
+        if (values.isNotEmpty()) {
+            dotPaint.color = colors.getOrElse(0) { generateRandomColor() }
+            canvas.drawCircle(center.x, center.y - radius, lineWidth / 2F, dotPaint)
+        }
 
         canvas.drawText(
-            "%.2f%%".format(data.sum() / total * 100),
+            "%.2f%%".format(values.sum() / total * 100),
             center.x,
             center.y + textPaint.textSize / 4,
             textPaint
