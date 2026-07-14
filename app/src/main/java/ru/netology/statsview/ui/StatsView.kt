@@ -7,9 +7,7 @@ import android.graphics.PointF
 import android.graphics.RectF
 import android.util.AttributeSet
 import android.view.View
-import androidx.annotation.IdRes
 import androidx.core.content.withStyledAttributes
-import org.w3c.dom.Attr
 import ru.netology.statsview.R
 import ru.netology.statsview.utils.AndroidUtils
 import kotlin.math.min
@@ -27,19 +25,28 @@ class StatsView @JvmOverloads constructor(
     defStyleRes,
 ) {
     private var textSize = AndroidUtils.dp(context, 20).toFloat()
-    private var lineWidth = AndroidUtils.dp(context, 5)
+    private var lineWidth = AndroidUtils.dp(context, 8)
     private var colors = emptyList<Int>()
+    private val paint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+        style = Paint.Style.STROKE
+        strokeJoin = Paint.Join.ROUND
+        strokeCap = Paint.Cap.ROUND
+    }
+    private val dotPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+        style = Paint.Style.FILL
+    }
     init {
         context.withStyledAttributes(attributeSet, R.styleable.StatsView) {
             textSize = getDimension(R.styleable.StatsView_android_textSize, textSize)
             lineWidth = getDimension(R.styleable.StatsView_lineWidth, lineWidth.toFloat()).toInt()
             colors = listOf(
-            getColor(R.styleable.StatsView_color1, generateRandomColor()),
-            getColor(R.styleable.StatsView_color2, generateRandomColor()),
-            getColor(R.styleable.StatsView_color3, generateRandomColor()),
-            getColor(R.styleable.StatsView_color4, generateRandomColor()),
+                getColor(R.styleable.StatsView_color1, generateRandomColor()),
+                getColor(R.styleable.StatsView_color2, generateRandomColor()),
+                getColor(R.styleable.StatsView_color3, generateRandomColor()),
+                getColor(R.styleable.StatsView_color4, generateRandomColor()),
             )
         }
+        paint.strokeWidth = lineWidth.toFloat()
     }
     var data: List<Float> = emptyList()
         set(value) {
@@ -49,15 +56,6 @@ class StatsView @JvmOverloads constructor(
     private var radius = 0F
     private var center = PointF()
     private var oval = RectF()
-    private val LineWidh = AndroidUtils.dp(context, 5)
-    private val paint = Paint(
-        Paint.ANTI_ALIAS_FLAG
-    ).apply {
-        strokeWidth = LineWidh.toFloat()
-        style = Paint.Style.STROKE
-        strokeJoin = Paint.Join.ROUND
-        strokeCap = Paint.Cap.ROUND
-    }
     private val textPaint = Paint(
         Paint.ANTI_ALIAS_FLAG
     ).apply {
@@ -67,7 +65,7 @@ class StatsView @JvmOverloads constructor(
     }
 
     override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {
-        radius = min(w, h) / 2F - LineWidh
+        radius = min(w, h) / 2F - lineWidth
         center = PointF(w / 2F, h / 2F)
         oval = RectF(
             center.x - radius,
@@ -75,7 +73,6 @@ class StatsView @JvmOverloads constructor(
             center.x + radius,
             center.y + radius
         )
-
     }
 
     override fun onDraw(canvas: Canvas) {
@@ -93,6 +90,9 @@ class StatsView @JvmOverloads constructor(
             canvas.drawArc(oval, startAngle, angle, false, paint)
             startAngle += angle
         }
+
+        dotPaint.color = colors.getOrElse(0) { generateRandomColor() }
+        canvas.drawCircle(center.x, center.y - radius, lineWidth / 2F, dotPaint)
 
         canvas.drawText(
             "%.2f%%".format(data.sum() / total * 100),
