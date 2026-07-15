@@ -1,5 +1,6 @@
 package ru.netology.statsview.ui
 
+import android.animation.ValueAnimator
 import android.content.Context
 import android.graphics.Canvas
 import android.graphics.Paint
@@ -27,12 +28,14 @@ class StatsView @JvmOverloads constructor(
     private var textSize = AndroidUtils.dp(context, 20).toFloat()
     private var lineWidth = AndroidUtils.dp(context, 8)
     private var colors = emptyList<Int>()
-    private val paint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+    private var progress = 0F
+    private var animator: ValueAnimator? = null
+    private val paint = Paint().apply {
         style = Paint.Style.STROKE
         strokeJoin = Paint.Join.ROUND
         strokeCap = Paint.Cap.ROUND
     }
-    private val dotPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+    private val dotPaint = Paint().apply {
         style = Paint.Style.FILL
     }
     init {
@@ -51,14 +54,21 @@ class StatsView @JvmOverloads constructor(
     var data: Pair<List<Float>, Float> = emptyList<Float>() to 0F
         set(value) {
             field = value
-            invalidate()
+            animator?.cancel()
+            progress = 0F
+            animator = ValueAnimator.ofFloat(0F, 1F).apply {
+                duration = 2000
+                addUpdateListener { anim ->
+                    progress = anim.animatedValue as Float
+                    invalidate()
+                }
+                start()
+            }
         }
     private var radius = 0F
     private var center = PointF()
     private var oval = RectF()
-    private val textPaint = Paint(
-        Paint.ANTI_ALIAS_FLAG
-    ).apply {
+    private val textPaint = Paint().apply {
         textSize = this@StatsView.textSize
         style = Paint.Style.FILL
         textAlign = Paint.Align.CENTER
@@ -83,9 +93,9 @@ class StatsView @JvmOverloads constructor(
         paint.color = 0xFFE0E0E0.toInt()
         canvas.drawCircle(center.x, center.y, radius, paint)
 
-        var startAngle = -90F
+        var startAngle = -90F + 360F * progress
         values.forEachIndexed { index, datum ->
-            val angle = datum / total * 360F
+            val angle = datum / total * 360F * progress
             paint.color = colors.getOrElse(index) { generateRandomColor() }
             canvas.drawArc(oval, startAngle, angle, false, paint)
             startAngle += angle
@@ -97,7 +107,7 @@ class StatsView @JvmOverloads constructor(
         }
 
         canvas.drawText(
-            "%.2f%%".format(values.sum() / total * 100),
+            "%.2f%%".format(values.sum() / total * progress * 100),
             center.x,
             center.y + textPaint.textSize / 4,
             textPaint
