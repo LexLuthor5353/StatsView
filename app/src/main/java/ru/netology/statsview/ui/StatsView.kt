@@ -35,9 +35,6 @@ class StatsView @JvmOverloads constructor(
         strokeJoin = Paint.Join.ROUND
         strokeCap = Paint.Cap.ROUND
     }
-    private val dotPaint = Paint().apply {
-        style = Paint.Style.FILL
-    }
     init {
         context.withStyledAttributes(attributeSet, R.styleable.StatsView) {
             textSize = getDimension(R.styleable.StatsView_android_textSize, textSize)
@@ -95,19 +92,16 @@ class StatsView @JvmOverloads constructor(
 
         var startAngle = -90F + 360F * progress
         values.forEachIndexed { index, datum ->
-            val angle = datum / total * 360F * progress
+            val maxAngle = datum / total * 360F
+            val angle = maxAngle * progress
             paint.color = colors.getOrElse(index) { generateRandomColor() }
             canvas.drawArc(oval, startAngle, angle, false, paint)
-            startAngle += angle
-        }
-
-        if (values.isNotEmpty()) {
-            dotPaint.color = colors.getOrElse(0) { generateRandomColor() }
-            canvas.drawCircle(center.x, center.y - radius, lineWidth / 2F, dotPaint)
+            startAngle += maxAngle
         }
 
         canvas.drawText(
-            "%.2f%%".format(values.sum() / total * progress * 100),
+            "100.00%",
+            //"%.2f%%".format(data.sum() * progress * 100), попытался сделать так что бы проценты считались от заполнения круга
             center.x,
             center.y + textPaint.textSize / 4,
             textPaint
