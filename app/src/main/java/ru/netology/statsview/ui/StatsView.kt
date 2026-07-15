@@ -29,6 +29,7 @@ class StatsView @JvmOverloads constructor(
     private var lineWidth = AndroidUtils.dp(context, 8)
     private var colors = emptyList<Int>()
     private var progress = 0F
+    private var fillType = FillType.PARALLEL
     private var animator: ValueAnimator? = null
     private val paint = Paint().apply {
         style = Paint.Style.STROKE
@@ -45,6 +46,10 @@ class StatsView @JvmOverloads constructor(
                 getColor(R.styleable.StatsView_color3, generateRandomColor()),
                 getColor(R.styleable.StatsView_color4, generateRandomColor()),
             )
+            fillType = when (getInt(R.styleable.StatsView_fillType, 0)) {
+                1 -> FillType.SEQUENTIAL
+                else -> FillType.PARALLEL
+            }
         }
         paint.strokeWidth = lineWidth.toFloat()
     }
@@ -96,16 +101,25 @@ class StatsView @JvmOverloads constructor(
             val angle = maxAngle * progress
             paint.color = colors.getOrElse(index) { generateRandomColor() }
             canvas.drawArc(oval, startAngle, angle, false, paint)
-            startAngle += maxAngle
+            startAngle += when (fillType) {
+                FillType.PARALLEL -> maxAngle
+                FillType.SEQUENTIAL -> angle
+            }
         }
 
         canvas.drawText(
+            //"%.2f%%".format(data.sum() * progress * 100), попытался сделать так что бы проценты считались от заполнения круга но что пошло не так
             "100.00%",
-            //"%.2f%%".format(data.sum() * progress * 100), попытался сделать так что бы проценты считались от заполнения круга
             center.x,
             center.y + textPaint.textSize / 4,
             textPaint
         )
     }
+
+    private enum class FillType {
+        PARALLEL,
+        SEQUENTIAL,
+    }
+
     fun generateRandomColor(): Int = Random.nextInt(0xFF000000.toInt(), 0xFFFFFFFF.toInt())
 }

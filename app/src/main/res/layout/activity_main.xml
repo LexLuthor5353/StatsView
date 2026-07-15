@@ -23,6 +23,7 @@
         app:color2="#EA4335"
         app:color3="#FBBC05"
         app:color4="#34A853"
+        app:fillType="parallel"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
