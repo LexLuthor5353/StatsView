@@ -108,8 +108,7 @@ class StatsView @JvmOverloads constructor(
         }
 
         canvas.drawText(
-            //"%.2f%%".format(data.sum() * progress * 100), попытался сделать так что бы проценты считались от заполнения круга но что пошло не так
-            "100.00%",
+            "%.2f%%".format(values.sum() / total * progress * 100),
             center.x,
             center.y + textPaint.textSize / 4,
             textPaint
